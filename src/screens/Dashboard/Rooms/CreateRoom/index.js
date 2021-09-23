@@ -1,0 +1,251 @@
+import React, {useEffect, useState} from 'react';
+import {
+  View,
+  StyleSheet,
+  TextInput,
+  Image,
+  Text,
+  ActivityIndicator,
+  Pressable,
+} from 'react-native';
+import {Picker} from '@react-native-picker/picker';
+import {height} from '../../../../constants';
+import ImagePicker from 'react-native-image-crop-picker';
+import storage from '@react-native-firebase/storage';
+import firestore from '@react-native-firebase/firestore';
+import auth from '@react-native-firebase/auth';
+
+export default function Create() {
+  const [pickerValue, setPickerValue] = useState(2);
+  const [groupName, setGroupName] = useState('');
+  const [description, setDescription] = useState('');
+  const [imageUri, setImageUri] = useState();
+  const [imageUrl, setImageUrl] = useState();
+  const [transferred, setTransferred] = useState(0);
+  const [visible, setVisible] = useState(false);
+  const [uploading, setUploading] = useState(false);
+
+  let styles = StyleSheet.create({
+    Container: {flex: 1, backgroundColor: '#fff', height},
+    nameInput: {
+      shadowColor: '#333',
+      elevation: 48,
+      padding: 12,
+      marginHorizontal: 12,
+      marginTop: 24,
+      borderRadius: 12,
+      backgroundColor: '#fff',
+    },
+    picker: {
+      elevation: 8,
+      backgroundColor: 'transparent',
+      marginHorizontal: 12,
+      borderRadius: 12,
+    },
+    numberOfMembers: {
+      backgroundColor: '#fff',
+      marginTop: 12,
+      marginHorizontal: 28,
+    },
+    pickerContainer: {
+      marginTop: 12,
+      backgroundColor: '#fff',
+      display: 'flex',
+      marginHorizontal: 12,
+      borderRadius: 12,
+      shadowColor: '#333',
+      elevation: 48,
+    },
+    groupImage: {
+      height: 125,
+      width: 125,
+      marginTop: 8,
+      alignSelf: 'center',
+      borderRadius: 900,
+    },
+    imagePickerStyle: {
+      textAlign: 'center',
+      marginTop: 8,
+      color: '#45A4FF',
+    },
+    createButton: {
+      backgroundColor: '#45A4FF',
+      padding: 18,
+      marginHorizontal: 12,
+      marginTop: 28,
+      borderRadius: 12,
+      opacity: groupName.replace(/\s/g, '').length < 5 ? 0.5 : 18,
+      shadowColor: '#000',
+      elevation: groupName.replace(/\s/g, '').length < 5 ? 0 : 18,
+    },
+  });
+
+  let PickImage = () => {
+    ImagePicker.openPicker({
+      width: 1300,
+      height: 1400,
+      cropping: true,
+      compressImageQuality: 1,
+    }).then(image => {
+      setImageUri(image.path);
+      console.log(image);
+    });
+  };
+
+  const uploadImage = async () => {
+    if (!imageUri) {
+      return null;
+    } else {
+      const path = `photos/${auth().currentUser.uid}/${Date.now()}`;
+      return new Promise(async (resolve, rej) => {
+        const response = await fetch(imageUri);
+        const file = await response.blob();
+        let upload = storage().ref(path).put(file);
+        upload.on(
+          'state_changed',
+          snapshot => {
+            setUploading(true);
+            console.log(
+              `${snapshot.bytesTransferred} transferred out of ${snapshot.totalBytes}`,
+            ),
+              setVisible(true);
+            setTransferred(
+              Math.round(snapshot.bytesTransferred / snapshot.totalBytes) * 100,
+            );
+          },
+          err => {
+            rej(err);
+          },
+          async () => {
+            const url = await upload.snapshot.ref.getDownloadURL();
+            setImageUrl(url);
+            setVisible(false);
+            setUploading(false);
+            console.log(url);
+            resolve(url);
+            setImageUri(null);
+            return url;
+          },
+        );
+      });
+    }
+  };
+
+  let createGroup = async () => {
+    let url = await uploadImage();
+    try {
+      firestore()
+        .collection('groups')
+        .doc(`${groupName.replace(/\s/g, '').toLowerCase()}`)
+        .collection('Members')
+        .doc(auth().currentUser?.uid)
+        .set({
+          uid: auth().currentUser.uid,
+        })
+        .then(() => {
+          firestore()
+            .collection('groups')
+            .doc(`${groupName.replace(/\s/g, '').toLowerCase()}`)
+            .set({
+              groupName,
+              createdAt: Date.now(),
+              numberOfMembers: pickerValue,
+              ownerUid: auth().currentUser.uid,
+              description,
+              members: firestore.FieldValue.arrayUnion(auth().currentUser.uid),
+              groupImage: url ? url : '',
+            })
+            .then(() => {
+              firestore()
+                .collection('users')
+                .doc(auth().currentUser.uid)
+                .update({
+                  groups: firestore.FieldValue.arrayUnion(
+                    groupName.replace(/\s/g, '').toLowerCase(),
+                  ),
+                });
+            })
+            .catch(e => alert(e));
+        })
+        .catch(e => alert(e));
+    } catch (error) {}
+  };
+
+  return (
+    <View style={styles.Container}>
+      <View>
+        <Image
+          source={{
+            uri: imageUri
+              ? imageUri
+              : 'https://media.istockphoto.com/vectors/profile-picture-vector-illustration-vector-id587805156?k=20&m=587805156&s=612x612&w=0&h=Ok_jDFC5J1NgH20plEgbQZ46XheiAF8sVUKPvocne6Y=',
+          }}
+          style={styles.groupImage}
+        />
+        <Pressable onPress={PickImage}>
+          <Text style={styles.imagePickerStyle}>Choose Photo</Text>
+        </Pressable>
+        <TextInput
+          value={groupName}
+          onChangeText={_val => setGroupName(_val)}
+          placeholder="Name"
+          style={styles.nameInput}
+        />
+        <TextInput
+          value={description}
+          onChangeText={_val => setDescription(_val)}
+          placeholder="Description (optional)"
+          style={[styles.nameInput, {marginTop: 8}]}
+        />
+        <View style={styles.pickerContainer}>
+          <Text style={styles.numberOfMembers}>Number Of Members</Text>
+          <Picker
+            mode={'dialog'}
+            selectedValue={pickerValue}
+            onValueChange={(itemValue, value) => {
+              setPickerValue(itemValue);
+            }}
+            style={styles.picker}>
+            <Picker.Item label="2" value="2" />
+            <Picker.Item label="3" value="3" />
+            <Picker.Item label="4" value="4" />
+            <Picker.Item label="5" value="5" />
+            <Picker.Item label="6" value="6" />
+            <Picker.Item label="7" value="7" />
+            <Picker.Item label="8" value="8" />
+            <Picker.Item label="9" value="9" />
+            <Picker.Item label="10" value="10" />
+            <Picker.Item label="11" value="11" />
+            <Picker.Item label="12" value="12" />
+            <Picker.Item label="13" value="13" />
+            <Picker.Item label="14" value="14" />
+            <Picker.Item label="15" value="15" />
+            <Picker.Item label="16" value="16" />
+            <Picker.Item label="17" value="17" />
+            <Picker.Item label="18" value="18" />
+            <Picker.Item label="19" value="19" />
+            <Picker.Item label="20" value="20" />
+          </Picker>
+        </View>
+      </View>
+      <Pressable
+        disabled={groupName.replace(/\s/g, '').length < 5 ? true : false}
+        style={styles.createButton}
+        onPress={() => createGroup()}>
+        {uploading === true ? (
+          <ActivityIndicator size={24} color={'#fff'} />
+        ) : (
+          <Text
+            style={{
+              textAlign: 'center',
+              fontSize: 18,
+              color: '#fff',
+              fontWeight: 'bold',
+            }}>
+            Create
+          </Text>
+        )}
+      </Pressable>
+    </View>
+  );
+}
