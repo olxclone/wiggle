@@ -26,7 +26,7 @@ export default function DrawerContent(props) {
   let getUser = () => {
     firestore()
       .collection('users')
-      .doc(auth().currentUser.uid)
+      .doc(auth().currentUser?.uid)
       .get()
       .then(val => {
         setUser(val.data());
@@ -163,7 +163,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 16,
     marginTop: 3,
-    fontWeight: 'bold',
+    fontFamily: 'Lato-Bold',
   },
   caption: {
     fontSize: 14,

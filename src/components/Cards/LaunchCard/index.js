@@ -1,13 +1,14 @@
 /* eslint-disable no-unused-vars */
-/* eslint-disable react-native/no-inline-styles */ 
+/* eslint-disable react-native/no-inline-styles */
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
 import moment from 'moment';
 import React from 'react';
 import {View, Text, Image, StyleSheet, TouchableOpacity} from 'react-native';
 import {ScrollView} from 'react-native-gesture-handler';
+import dayjs from 'dayjs';
 
-export default function LaunchCard({item}) {
+export default function LaunchCard({navigation, groupId, item, groupName}) {
   let styles = StyleSheet.create({
     cardStyle: {
       shadowColor: '#000',
@@ -34,7 +35,16 @@ export default function LaunchCard({item}) {
   };
 
   return (
-    <TouchableOpacity activeOpacity={1}>
+    <TouchableOpacity
+      activeOpacity={1}
+      onPress={() => {
+        navigation.navigate('photogram.chat.screen', {
+          headerTitle: groupName,
+          id: item.id,
+          item: item,
+          members: item.members,
+        });
+      }}>
       <ScrollView>
         <View
           style={{
@@ -49,6 +59,9 @@ export default function LaunchCard({item}) {
             marginHorizontal: 24,
           }}>
           <View style={{flexDirection: 'row', marginVertical: 12}}>
+            <Text style={{position: 'absolute', left: 300}}>
+              {item.members.lengths}
+            </Text>
             <Image
               source={{
                 uri: item.groupImage
@@ -65,20 +78,8 @@ export default function LaunchCard({item}) {
                   fontSize: 12,
                   marginTop: 2,
                 }}>
-                {moment(item.createdAt).format('LLL')}
+                {dayjs(Date.now()).format('ll')}
               </Text>
-              <TouchableOpacity
-                onPress={() => joinGroup(item.id)}
-                style={{marginTop: 12}}>
-                <Text
-                  style={{
-                    fontSize: 16,
-                    fontFamily: 'Lato-Regular',
-                    color: '#45A4FF',
-                  }}>
-                  {'Join'}
-                </Text>
-              </TouchableOpacity>
             </View>
           </View>
         </View>

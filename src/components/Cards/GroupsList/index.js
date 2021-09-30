@@ -3,13 +3,15 @@
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
 import moment from 'moment';
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import {View, Text, Image, StyleSheet, TouchableOpacity} from 'react-native';
 import {ScrollView} from 'react-native-gesture-handler';
 import {Button, Card} from 'react-native-paper';
 import {height} from '../../../constants';
 
-export default function GroupsListCard({item}) {
+export default function GroupsListCard({item, navigation}) {
+  let [isInGroup, setIngroup] = useState(false);
+
   let styles = StyleSheet.create({
     cardStyle: {
       shadowColor: '#000',
@@ -34,6 +36,38 @@ export default function GroupsListCard({item}) {
         });
     } catch (error) {}
   };
+
+  // const doesContainUserInGroup = async () => {
+  //   try {
+  //     firestore()
+  //       .collection('groups')
+  //       .where('members', 'array-contains', auth().currentUser.uid)
+  //       .onSnapshot(_data => {
+  //         if (_data.empty) {
+  //           console.log(_data.docs);
+  //         } else {
+  //           setIngroup(true);
+  //         }
+  //       });
+  //   } catch (error) {}
+  // };
+
+  // useEffect(() => {
+  //   firestore()
+  //     .collection('groups')
+  //     .doc()
+  //     .collection()
+  //     .where('members', 'array-contains', auth().currentUser.uid)
+  //     .onSnapshot(_data => {
+  //       if (_data.empty) {
+  //         setIngroup(false);
+  //         console.log('user not in group');
+  //       } else {
+  //         setIngroup(true);
+  //         console.log('user in group');
+  //       }
+  //     });
+  // }, [doesContainUserInGroup]);
 
   return (
     <TouchableOpacity activeOpacity={1}>
@@ -70,7 +104,12 @@ export default function GroupsListCard({item}) {
                 {moment(item.createdAt).format('LLL')}
               </Text>
               <TouchableOpacity
-                onPress={() => joinGroup(item.id)}
+                onPress={() =>
+                  navigation.navigate('photogram.roomdetails.screen', {
+                    item: item,
+                    id: item.id,
+                  })
+                }
                 style={{marginTop: 12}}>
                 <Text
                   style={{
@@ -78,7 +117,7 @@ export default function GroupsListCard({item}) {
                     fontFamily: 'Lato-Regular',
                     color: '#45A4FF',
                   }}>
-                  {'Join'}
+                  {isInGroup ? 'Already In group' : 'Details'}
                 </Text>
               </TouchableOpacity>
             </View>

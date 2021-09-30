@@ -1,9 +1,9 @@
+/* eslint-disable react-native/no-inline-styles */
 import {createDrawerNavigator} from '@react-navigation/drawer';
 import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
-import React from 'react';
+import React, {useState} from 'react';
 import {DrawerContent} from './src/components';
-import {AuthProvider} from './src/context/AuthProvider';
 import {
   CreateRoom as CreateScreen,
   JoinRoom as JoinScreen,
@@ -14,10 +14,18 @@ import {
   Register,
   Search,
   Settings,
+  Chat,
   Support,
+  RoomDetail,
 } from './src/screens';
+import {Text} from 'react-native';
+import {AuthContext} from './src/context';
+import auth from '@react-native-firebase/auth';
+import firestore from '@react-native-firebase/firestore';
 
 export default function App() {
+  let [user, setUser] = useState();
+  let [userData, setUserData] = useState();
   let Stack = createNativeStackNavigator();
   let MainDrawerStack = createDrawerNavigator();
 
@@ -27,7 +35,11 @@ export default function App() {
         drawerContent={props => <DrawerContent {...props} />}>
         <MainDrawerStack.Screen
           name="photogram.launch.screen"
-          options={{title: 'Wiggle', headerLeft: null, headerShown: true}}
+          options={{
+            title: <Text style={{fontFamily: 'Lato-Bold'}}>{'Wiggle'}</Text>,
+            headerLeft: null,
+            headerShown: false,
+          }}
           component={Launch}
         />
         <MainDrawerStack.Screen
@@ -54,8 +66,26 @@ export default function App() {
     );
   };
 
+  React.useEffect(() => {
+    auth().onAuthStateChanged(user => {
+      if (user) {
+        firestore()
+          .collection('users')
+          .doc(user.uid)
+          .get()
+          .then(userDataFromFirestore => {
+            setUserData(userDataFromFirestore.data());
+          });
+        setUser(user);
+      } else {
+        setUser(null);
+        setUserData(null);
+      }
+    });
+  }, []);
+
   return (
-    <AuthProvider>
+    <AuthContext.Provider value={{user, userData}}>
       <NavigationContainer>
         <Stack.Navigator>
           <Stack.Screen
@@ -97,8 +127,18 @@ export default function App() {
             name="photogram.create.screen"
             component={CreateScreen}
           />
+          <Stack.Screen
+            options={{headerShown: false}}
+            name="photogram.chat.screen"
+            component={Chat}
+          />
+          <Stack.Screen
+            options={{headerShown: false}}
+            name="photogram.roomdetails.screen"
+            component={RoomDetail}
+          />
         </Stack.Navigator>
       </NavigationContainer>
-    </AuthProvider>
+    </AuthContext.Provider>
   );
 }

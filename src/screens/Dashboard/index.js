@@ -1,5 +1,5 @@
+import Chat from './Chat';
 import Launch from './LaunchScreen';
-import {CreateRoom, JoinRoom} from './Rooms';
+import {CreateRoom, JoinRoom, RoomDetail} from './Rooms';
 import Search from './SearchScreen';
-
-export {Launch, Search, JoinRoom, CreateRoom};
+export {Launch, Search, Chat, JoinRoom, CreateRoom, RoomDetail};

@@ -1,12 +1,11 @@
 import React, {useEffect, useState} from 'react';
 import {View, Text, StyleSheet} from 'react-native';
-import Ionicons from 'react-native-vector-icons/Ionicons';
 import {FloatingAction} from 'react-native-floating-action';
 import {FlatList} from 'react-native-gesture-handler';
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
 import {LaunchCard} from '../../../components';
-
+import Ionicons from 'react-native-vector-icons/Ionicons';
 export default function Launch({navigation}) {
   const [groups, setGroups] = useState([]);
 
@@ -41,7 +40,6 @@ export default function Launch({navigation}) {
       await firestore()
         .collection('groups')
         .where('members', 'array-contains', auth().currentUser.uid)
-        .limit(3)
         .get()
         .then(_doc => {
           _doc.docs.forEach(data => {
@@ -70,14 +68,49 @@ export default function Launch({navigation}) {
 
   useEffect(() => {
     fetchGroups();
-  });
+  }, []);
 
   return (
-    <View style={{flex: 1}}>
+    <View style={{flex: 1, backgroundColor: '#FFF'}}>
+      <View
+        style={{
+          marginTop: 24,
+          marginBottom: 18,
+          flexDirection: 'row',
+          display: 'flex',
+          alignItems: 'center',
+        }}>
+        <Ionicons
+          onPress={() => navigation.openDrawer()}
+          name="ios-menu"
+          size={36}
+          style={{marginHorizontal: 12}}
+          color="black"
+        />
+        <Text
+          style={{
+            fontWeight: '900',
+            fontFamily: 'Lato-Bold',
+            textShadowColor: '#fff',
+            textShadowRadius: 24,
+            elevation: 6,
+            fontSize: 46,
+          }}>
+          Wiggle
+        </Text>
+      </View>
       <FlatList
         data={groups}
+        showsVerticalScrollIndicator={false}
         renderItem={({item}) => {
-          return <LaunchCard item={item} />;
+          return (
+            <LaunchCard
+              groupName={item.groupName}
+              navigation={navigation}
+              item={item}
+              groupId={item.id}
+            />
+          );
         }}
       />
       <FloatingAction

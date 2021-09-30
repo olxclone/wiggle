@@ -1,4 +1,4 @@
 import CreateRoom from './CreateRoom';
 import JoinRoom from './JoinRoom';
-
-export {CreateRoom, JoinRoom};
+import RoomDetail from './RoomDetails';
+export {RoomDetail, CreateRoom, JoinRoom};

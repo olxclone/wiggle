@@ -7,7 +7,7 @@ import auth from '@react-native-firebase/auth';
 import GroupsListCard from '../../../../components/Cards/GroupsList';
 import {height, width} from '../../../../constants';
 
-export default function Join() {
+export default function Join({navigation}) {
   const [groups, setGroups] = useState([]);
   const [groupNameId, setGroupName] = useState('');
 
@@ -16,9 +16,9 @@ export default function Join() {
     try {
       await firestore()
         .collection('groups')
-        .orderBy('createdAt', 'asc')
-        .limit(5)
+        .where('members', '!=', [auth().currentUser.uid])
         .onSnapshot(val => {
+          console.log(val.size);
           val.docs.forEach(data => {
             let {
               description,
@@ -38,7 +38,6 @@ export default function Join() {
               createdAt,
             });
             setGroups(Lists);
-            console.log(Lists);
           });
         });
     } catch (error) {}
@@ -70,24 +69,17 @@ export default function Join() {
 
   return (
     <View style={{flex: 1, height: height, backgroundColor: '#fff'}}>
-      <Text style={styles.title}>Join Room</Text>
-      <TextInput
-        onChangeText={_val => setGroupName(_val)}
-        style={styles.searchInput}
-        placeholder={'Search'}
-      />
       <View
         style={{
           backgroundColor: '#45A4FF',
           height,
-          marginTop: 32,
           borderTopStartRadius: 24,
         }}>
         <FlatList
           data={groups}
           contentContainerStyle={{marginTop: 12, marginBottom: 12}}
           renderItem={({item}) => {
-            return <GroupsListCard item={item} />;
+            return <GroupsListCard navigation={navigation} item={item} />;
           }}
         />
       </View>
