@@ -1,4 +1,6 @@
-import React, {useEffect, useRef, useState} from 'react';
+/* eslint-disable no-undef */
+/* eslint-disable react-native/no-inline-styles */
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {
   FlatList,
   Image,
@@ -22,11 +24,12 @@ import AntDesign from 'react-native-vector-icons/AntDesign';
 export default function Chat(props) {
   let [imageUri, setImageUri] = useState('');
   let [imageUrl, setImageUrl] = useState('');
+  let [userForToken, setUserForToken] = useState([]);
+  let [tokens, setTokens] = useState('');
   let [messageText, setMessageText] = useState('');
   let [messages, setMessages] = useState([]);
 
-  let fetchMessages = async () => {
-    let Lists = [];
+  let fetchMessages = useCallback(async () => {
     try {
       await firestore()
         .collection('groups')
@@ -40,11 +43,26 @@ export default function Chat(props) {
           setMessages(allMsg);
         });
     } catch (e) {}
-  };
+  }, [props.route.params.id]);
 
   useEffect(() => {
     fetchMessages();
-  }, []);
+  }, [fetchMessages]);
+
+  useEffect(() => {
+    props.route.params.members.map(async item => {
+      await firestore()
+        .collection('users')
+        .doc(item)
+        .get()
+        .then(__val => {
+          let Lists = [];
+          let {token} = __val.data();
+          Lists.push(token);
+          setUserForToken(Lists);
+        });
+    });
+  }, [props.route.params.members]);
 
   let pickImage = () => {
     ImageCropPicker.openPicker({
@@ -71,10 +89,54 @@ export default function Chat(props) {
           messageText,
           image: imageUri ? imageUri : null,
           uid: auth().currentUser.uid,
-        });
+        })
+        .then(() => sendPushNotification());
       setMessageText('');
       setImageUri(null);
     } catch (e) {}
+  };
+
+  const sendPushNotification = async () => {
+    const FIREBASE_API_KEY =
+      'AAAAjqJY0zI:APA91bFf3LXAnyDmGHgTUNKhjVoKzEpbjDeRkOQOXqDs3OB2j2FEYZduHluuyqdD0Ul9qtCPMcB9Cc3uAClcwjR6RK0gZFuF2YVpOAmvSsWIlAecIENsh92oXpCuvqiqG6z2vdouGqah';
+    const message = {
+      registration_ids: userForToken,
+      // notification: {
+      //   vibrate: 1,
+      //   sound: 1,
+      //   show_in_foreground: true,
+      //   priority: 'high',
+      //   title: props.route.params.headerTitle,
+      //   icon: props.route.params.item.groupImage,
+      //   content_available: true,
+      // },
+      data: {
+        type: 'MEASURE_CHANGE',
+        custom_notification: {
+          body: 'test body',
+          title: 'test title',
+          color: '#00ACD4',
+          priority: 'high',
+          icon: 'ic_notif',
+          group: 'GROUP',
+          id: 'id',
+          show_in_foreground: true,
+        },
+      },
+    };
+
+    let headers = new Headers({
+      'Content-Type': 'application/json',
+      Authorization: 'key=' + FIREBASE_API_KEY,
+    });
+
+    let response = await fetch('https://fcm.googleapis.com/fcm/send', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(message),
+    });
+    response = await response.json();
+    console.log(response);
   };
 
   let flatlistRef = useRef();
@@ -92,11 +154,22 @@ export default function Chat(props) {
         <AntDesign
           onPress={() => props.navigation.goBack()}
           name="arrowleft"
-          style={{marginHorizontal: 12}}
+          style={{marginHorizontal: 8}}
           size={24}
           color="black"
         />
-        <View>
+        <Image
+          source={{uri: props.route.params.item.groupImage}}
+          style={{width: 36, marginRight: 8, borderRadius: 80, height: 36}}
+        />
+        <TouchableOpacity
+          activeOpacity={1}
+          onPress={() =>
+            props.navigation.navigate('photogram.chatDetails.screen', {
+              item: props.route.params.item,
+              route: props.route,
+            })
+          }>
           <Text style={{fontFamily: 'Lato-Bold'}}>
             {props.route.params.headerTitle}
           </Text>
@@ -104,7 +177,7 @@ export default function Chat(props) {
             style={{
               fontFamily: 'Lato-Regular',
             }}>{`${props.route.params.item.members.length} members`}</Text>
-        </View>
+        </TouchableOpacity>
       </View>
       <Modal
         style={{justifyContent: 'center', display: 'flex'}}
@@ -145,16 +218,20 @@ export default function Chat(props) {
           </TouchableOpacity>
         </View>
       </Modal>
-      <ScrollView style={{flexDirection: 'column-reverse'}}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        style={{flexDirection: 'column-reverse'}}>
         <FlatList
           enableEmptySections={true}
           scrollEnabled={true}
-          inverted
+          inverted={false}
           scrollEventThrottle={100}
           ref={flatlistRef}
           style={{
             marginBottom: 12,
             flex: 1,
+            bottom: 0,
+            flexDirection: 'column-reverse',
           }}
           automaticallyAdjustContentInsets={false}
           showsVerticalScrollIndicator={false}
