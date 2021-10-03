@@ -6,6 +6,7 @@ import {
   Launch,
   RoomDetail,
   Search,
+  Users,
 } from './Dashboard';
 import {EditProfile, Profile, Settings, Support} from './Profile';
 export {
@@ -22,4 +23,5 @@ export {
   CreateRoom,
   Chat,
   RoomDetail,
+  Users,
 };

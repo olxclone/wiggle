@@ -17,6 +17,7 @@ import {
   Chat,
   Support,
   RoomDetail,
+  Users,
 } from './src/screens';
 import {Text} from 'react-native';
 import {AuthContext} from './src/context';
@@ -120,7 +121,7 @@ export default function App() {
           />
           <Stack.Screen
             options={{
-              headerShown: true,
+              headerShown: false,
               title: 'Create Room',
               headerTitleAlign: 'center',
             }}
@@ -136,6 +137,16 @@ export default function App() {
             options={{headerShown: false}}
             name="photogram.roomdetails.screen"
             component={RoomDetail}
+          />
+          <Stack.Screen
+            options={{headerShown: false}}
+            name="photogram.chatDetails.screen"
+            component={RoomDetail}
+          />
+          <Stack.Screen
+            options={{headerShown: false}}
+            name="photogram.users.screen"
+            component={Users}
           />
         </Stack.Navigator>
       </NavigationContainer>

@@ -10,12 +10,15 @@ import {
 } from 'react-native';
 import {height, width} from '../../../../constants';
 import auth from '@react-native-firebase/auth';
+import {StandaloneGallery} from 'react-native-gallery-toolkit';
 import firestore from '@react-native-firebase/firestore';
 import moment from 'moment';
 import {UsersList} from '../../../../components';
 import AntDesign from 'react-native-vector-icons/AntDesign';
+import Lightbox from 'react-native-lightbox';
 
-export default function RoomDetail({route}) {
+export default function RoomDetail({route, navigation}) {
+  console.log(route);
   let [user, setUser] = useState();
   let [users, setUsers] = useState([]);
   let [groupImages, setGroupImages] = useState([]);
@@ -71,13 +74,37 @@ export default function RoomDetail({route}) {
     <View>
       <ImageBackground
         style={{width, height: height / 3}}
-        source={{uri: route.params.item.groupImage}}>
-        <View style={{marginTop: '48%', marginHorizontal: 8}}>
-          <Text style={{fontFamily: 'Lato-Bold', fontSize: 48, color: '#FFF'}}>
+        source={{
+          uri: route.params.item.groupImage
+            ? route.params.item.groupImage
+            : 'https://media.istockphoto.com/vectors/profile-picture-vector-illustration-vector-id587805156?k=20&m=587805156&s=612x612&w=0&h=Ok_jDFC5J1NgH20plEgbQZ46XheiAF8sVUKPvocne6Y=',
+        }}>
+        <View
+          style={{
+            marginTop: '48%',
+            marginHorizontal: 8,
+            shadowColor: '#000',
+            shadowRadius: 18,
+            elevation: 8,
+          }}>
+          <Text
+            style={{
+              fontFamily: 'Lato-Bold',
+              textShadowRadius: 39,
+              textShadowColor: '#000',
+              fontSize: 48,
+              color: '#FFF',
+            }}>
             {route.params.item.groupName}
           </Text>
           <Text
-            style={{fontFamily: 'Lato-Regular', fontSize: 16, color: '#FFF'}}>
+            style={{
+              fontFamily: 'Lato-Regular',
+              textShadowRadius: 19,
+              textShadowColor: '#000',
+              fontSize: 16,
+              color: '#FFF',
+            }}>
             created By {user ? user.userName : 'unknown'},{' '}
             {moment(route.params.item.createdAt).format('L')}
           </Text>
@@ -112,7 +139,6 @@ export default function RoomDetail({route}) {
                 source={{uri: item.image}}
                 style={{
                   marginLeft: 4,
-
                   height: item.image ? 75 : 0,
                   marginTop: 4,
                   width: item.image ? 75 : 0,
@@ -151,6 +177,7 @@ export default function RoomDetail({route}) {
             />
           </View>
         }
+        stickyHeaderIndices={[0, 6, 13]}
         renderItem={({item}) => {
           setUsers(item);
           return (
@@ -162,6 +189,31 @@ export default function RoomDetail({route}) {
           );
         }}
       />
+      <View>
+        {route.params.ownerUid === auth().currentUser.uid
+          ? console.log('user is owner')
+          : console.log('user is not your owner')}
+        {route.name === 'photogram.chatDetails.screen' ? (
+          route.params.item.ownerUid === auth().currentUser.uid ? (
+            <TouchableOpacity
+              onPress={() =>
+                navigation.navigate('photogram.users.screen', {
+                  members: route.params.item.members,
+                })
+              }>
+              <Text
+                style={{
+                  fontFamily: 'Lato-Regular',
+                  fontSize: 16,
+                  marginTop: 6,
+                  textAlign: 'center',
+                }}>
+                Add
+              </Text>
+            </TouchableOpacity>
+          ) : null
+        ) : null}
+      </View>
 
       <TouchableOpacity
         onPress={() => joinGroup()}
@@ -177,7 +229,7 @@ export default function RoomDetail({route}) {
             fontSize: 18,
             color: '#45A4FF',
           }}>
-          {'Join'}
+          {route.name === 'photogram.chatDetails.screen' ? '' : 'Join'}
         </Text>
       </TouchableOpacity>
     </View>

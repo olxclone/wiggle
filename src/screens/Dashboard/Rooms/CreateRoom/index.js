@@ -1,3 +1,5 @@
+/* eslint-disable no-alert */
+/* eslint-disable react-native/no-inline-styles */
 import React, {useEffect, useState} from 'react';
 import {
   View,
@@ -7,16 +9,19 @@ import {
   Text,
   ActivityIndicator,
   Pressable,
+  TouchableOpacity,
 } from 'react-native';
 import {Picker} from '@react-native-picker/picker';
 import {height} from '../../../../constants';
+import AntDesign from 'react-native-vector-icons/AntDesign';
 import ImagePicker from 'react-native-image-crop-picker';
 import storage from '@react-native-firebase/storage';
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
 
-export default function Create() {
+export default function Create({navigation}) {
   const [pickerValue, setPickerValue] = useState(2);
+  const [type, setType] = useState(1);
   const [groupName, setGroupName] = useState('');
   const [description, setDescription] = useState('');
   const [imageUri, setImageUri] = useState();
@@ -152,6 +157,7 @@ export default function Create() {
               numberOfMembers: pickerValue,
               ownerUid: auth().currentUser.uid,
               description,
+              requests: type === 'Approval' ? [] : null,
               members: firestore.FieldValue.arrayUnion(auth().currentUser.uid),
               groupImage: url ? url : '',
             })
@@ -165,6 +171,9 @@ export default function Create() {
                   ),
                 });
             })
+            .then(() => {
+              navigation.goBack();
+            })
             .catch(e => alert(e));
         })
         .catch(e => alert(e));
@@ -173,6 +182,34 @@ export default function Create() {
 
   return (
     <View style={styles.Container}>
+      <View
+        style={{
+          marginTop: 24,
+          marginBottom: 18,
+          flexDirection: 'row',
+          display: 'flex',
+          alignItems: 'center',
+        }}>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <AntDesign
+            name="left"
+            size={36}
+            style={{marginHorizontal: 12}}
+            color="black"
+          />
+        </TouchableOpacity>
+        <Text
+          style={{
+            fontWeight: '900',
+            fontFamily: 'Lato-Bold',
+            textShadowColor: '#fff',
+            textShadowRadius: 24,
+            elevation: 6,
+            fontSize: 46,
+          }}>
+          Create
+        </Text>
+      </View>
       <View>
         <Image
           source={{
@@ -225,6 +262,19 @@ export default function Create() {
             <Picker.Item label="18" value="18" />
             <Picker.Item label="19" value="19" />
             <Picker.Item label="20" value="20" />
+          </Picker>
+        </View>
+        <View style={styles.pickerContainer}>
+          <Text style={styles.numberOfMembers}>Type</Text>
+          <Picker
+            mode={'dialog'}
+            selectedValue={pickerValue}
+            onValueChange={(itemValue, value) => {
+              setType(itemValue);
+            }}
+            style={styles.picker}>
+            <Picker.Item label="Approval" value="Approval" />
+            <Picker.Item label="Any one can Join" value="Any one can Join" />
           </Picker>
         </View>
       </View>

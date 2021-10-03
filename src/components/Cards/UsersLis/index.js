@@ -5,7 +5,7 @@ import firestore from '@react-native-firebase/firestore';
 import {FlatList} from 'react-native-gesture-handler';
 import auth from '@react-native-firebase/auth';
 
-export default function UsersList({data, members, ownerUid}) {
+export default function UsersList({data, members, ownerUid }) {
   let [users, setUsers] = useState([]);
   let getAllUsersInGroup = useCallback(async () => {
     let usersFromDb = [];
@@ -46,7 +46,7 @@ export default function UsersList({data, members, ownerUid}) {
                 alignItems: 'center',
               }}>
               <Image
-                style={{width: 50, height: 50}}
+                style={{width: 50, height: 50, borderRadius: 100}}
                 source={{
                   uri: item.image
                     ? item.image

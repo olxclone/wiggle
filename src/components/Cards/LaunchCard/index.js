@@ -78,7 +78,7 @@ export default function LaunchCard({navigation, groupId, item, groupName}) {
                   fontSize: 12,
                   marginTop: 2,
                 }}>
-                {dayjs(Date.now()).format('ll')}
+                {moment(item.createdAt).format('LL')}
               </Text>
             </View>
           </View>

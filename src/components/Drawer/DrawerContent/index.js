@@ -48,8 +48,8 @@ export default function DrawerContent(props) {
                   uri: user
                     ? user.userImg
                       ? user.userImg
-                      : 'https://api.adorable.io/avatars/50/abott@adorable.png'
-                    : 'https://api.adorable.io/avatars/50/abott@adorable.png',
+                      : 'https://www.pngkey.com/png/detail/950-9501315_katie-notopoulos-katienotopoulos-i-write-about-tech-user.png'
+                    : 'https://www.pngkey.com/png/detail/950-9501315_katie-notopoulos-katienotopoulos-i-write-about-tech-user.png',
                 }}
                 size={50}
               />
@@ -145,7 +145,7 @@ export default function DrawerContent(props) {
           )}
           label="Sign Out"
           onPress={() => {
-            null;
+            auth().signOut();
           }}
         />
       </Drawer.Section>

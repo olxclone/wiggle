@@ -37,6 +37,14 @@ export default function GroupsListCard({item, navigation}) {
     } catch (error) {}
   };
 
+  useEffect(() => {
+    if (item.members.indexOf(auth().currentUser.uid) > -1) {
+      console.log('contains');
+    } else {
+      console.log('does not contain');
+    }
+  }, [item.members]);
+
   // const doesContainUserInGroup = async () => {
   //   try {
   //     firestore()
@@ -103,23 +111,45 @@ export default function GroupsListCard({item, navigation}) {
                 }}>
                 {moment(item.createdAt).format('LLL')}
               </Text>
-              <TouchableOpacity
-                onPress={() =>
-                  navigation.navigate('photogram.roomdetails.screen', {
-                    item: item,
-                    id: item.id,
-                  })
-                }
-                style={{marginTop: 12}}>
-                <Text
-                  style={{
-                    fontSize: 16,
-                    fontFamily: 'Lato-Regular',
-                    color: '#45A4FF',
-                  }}>
-                  {isInGroup ? 'Already In group' : 'Details'}
-                </Text>
-              </TouchableOpacity>
+
+              {item.members.indexOf(auth().currentUser.uid) > -1 ? (
+                <TouchableOpacity
+                  onPress={() =>
+                    navigation.navigate('photogram.chat.screen', {
+                      item: item,
+                      headerTitle: item.groupName,
+                      id: item.id,
+                    })
+                  }
+                  style={{marginTop: 12}}>
+                  <Text
+                    style={{
+                      fontSize: 16,
+                      fontFamily: 'Lato-Regular',
+                      color: '#45A4FF',
+                    }}>
+                    Already in group
+                  </Text>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  onPress={() =>
+                    navigation.navigate('photogram.roomdetails.screen', {
+                      item: item,
+                      id: item.id,
+                    })
+                  }
+                  style={{marginTop: 12}}>
+                  <Text
+                    style={{
+                      fontSize: 16,
+                      fontFamily: 'Lato-Regular',
+                      color: '#45A4FF',
+                    }}>
+                    Details
+                  </Text>
+                </TouchableOpacity>
+              )}
             </View>
           </View>
         </View>
