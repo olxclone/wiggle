@@ -20,10 +20,13 @@ import auth from '@react-native-firebase/auth';
 import MessageCard from '../../../components/Cards/MessageCard';
 import ImageCropPicker from 'react-native-image-crop-picker';
 import AntDesign from 'react-native-vector-icons/AntDesign';
+import {SafeAreaView} from 'react-native-safe-area-context';
+import moment from 'moment';
 
 export default function Chat(props) {
   let [imageUri, setImageUri] = useState('');
   let [imageUrl, setImageUrl] = useState('');
+  let [userData, setUserData] = useState();
   let [userForToken, setUserForToken] = useState([]);
   let [tokens, setTokens] = useState('');
   let [messageText, setMessageText] = useState('');
@@ -45,11 +48,25 @@ export default function Chat(props) {
     } catch (e) {}
   }, [props.route.params.id]);
 
+  let getUser = useCallback(async () => {
+    try {
+      await firestore()
+        .collection('users')
+        .doc(auth().currentUser.uid)
+        .get()
+        .then(_userData => {
+          setUserData(_userData.data());
+          console.log(userData);
+        });
+    } catch (e) {}
+  }, []);
+
   useEffect(() => {
     fetchMessages();
   }, [fetchMessages]);
 
   useEffect(() => {
+    getUser();
     props.route.params.members.map(async item => {
       await firestore()
         .collection('users')
@@ -62,7 +79,7 @@ export default function Chat(props) {
           setUserForToken(Lists);
         });
     });
-  }, [props.route.params.members]);
+  }, [getUser, props.route.params.members]);
 
   let pickImage = () => {
     ImageCropPicker.openPicker({
@@ -87,6 +104,7 @@ export default function Chat(props) {
         .add({
           createdAt: Date.now(),
           messageText,
+          userName: userData.userName ? userData.userName : 'Tests',
           image: imageUri ? imageUri : null,
           uid: auth().currentUser.uid,
         })
@@ -140,6 +158,61 @@ export default function Chat(props) {
   };
 
   let flatlistRef = useRef();
+
+  let renderRow = ({item}) => {
+    const currentCreatedAt = moment(item.createdAt);
+    const diffCreatedAt = moment(item.createdAt);
+    const eventdate = moment(item.createdAt);
+    const today =
+      moment(Date.now()) === eventdate
+        ? moment(item.createdAt).calendar
+        : undefined;
+    const date = item.createdAt;
+    return (
+      <View>
+        <Text style={{textAlign: 'center'}}>
+          {currentCreatedAt.isSame(diffCreatedAt, 'day')
+            ? 'Today'
+            : diffCreatedAt.calendar()}
+        </Text>
+        <View
+          style={{
+            padding: item.image ? 4 : 14,
+            borderTopLeftRadius: 18,
+            borderTopRightRadius: 18,
+            borderBottomLeftRadius:
+              item.uid === auth().currentUser.uid ? 18 : 0,
+            marginTop: 4,
+            borderBottomRightRadius:
+              item.uid === auth().currentUser.uid ? 0 : 18,
+            marginRight: item.uid === auth().currentUser.uid ? 4 : width / 2.5,
+            marginLeft: item.uid === auth().currentUser.uid ? width / 2.5 : 4,
+            alignSelf:
+              item.uid !== auth().currentUser.uid ? 'flex-start' : 'flex-end',
+            backgroundColor:
+              item.uid === auth().currentUser?.uid ? 'yellow' : 'white',
+          }}>
+          <Image
+            style={{
+              height: item.image ? height / 4 : 0,
+              width: item.image ? width / 2 : 0,
+              borderTopLeftRadius: 18,
+              borderTopRightRadius: 18,
+              borderBottomLeftRadius: 18,
+            }}
+            source={{uri: item.image ? item.image : null}}
+          />
+          <Text
+            style={{
+              fontFamily: 'Lato-Regular',
+              textAlign: item.uid === auth().currentUser.uid ? 'right' : 'left',
+            }}>
+            {item.messageText}
+          </Text>
+        </View>
+      </View>
+    );
+  };
 
   return (
     <>
@@ -239,9 +312,7 @@ export default function Chat(props) {
             flatlistRef.current.scrollToEnd({animated: false})
           }
           data={messages}
-          renderItem={({item}) => {
-            return <MessageCard navigation={props.navigation} item={item} />;
-          }}
+          renderItem={renderRow}
         />
       </ScrollView>
       <View

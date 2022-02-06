@@ -18,11 +18,13 @@ import ImagePicker from 'react-native-image-crop-picker';
 import storage from '@react-native-firebase/storage';
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
+import {ScrollView} from 'react-native-gesture-handler';
 
 export default function Create({navigation}) {
   const [pickerValue, setPickerValue] = useState(2);
-  const [type, setType] = useState(1);
+  const [type, setType] = useState();
   const [groupName, setGroupName] = useState('');
+  const [password, setPassword] = useState('');
   const [description, setDescription] = useState('');
   const [imageUri, setImageUri] = useState();
   const [imageUrl, setImageUrl] = useState();
@@ -82,6 +84,7 @@ export default function Create({navigation}) {
       opacity: groupName.replace(/\s/g, '').length < 5 ? 0.5 : 18,
       shadowColor: '#000',
       elevation: groupName.replace(/\s/g, '').length < 5 ? 0 : 18,
+      marginBottom: 28,
     },
   });
 
@@ -181,7 +184,7 @@ export default function Create({navigation}) {
   };
 
   return (
-    <View style={styles.Container}>
+    <ScrollView style={styles.Container}>
       <View
         style={{
           marginTop: 24,
@@ -268,7 +271,7 @@ export default function Create({navigation}) {
           <Text style={styles.numberOfMembers}>Type</Text>
           <Picker
             mode={'dialog'}
-            selectedValue={pickerValue}
+            selectedValue={type}
             onValueChange={(itemValue, value) => {
               setType(itemValue);
             }}
@@ -278,6 +281,15 @@ export default function Create({navigation}) {
           </Picker>
         </View>
       </View>
+      {type === 'Approval' ? (
+        <TextInput
+          value={password}
+          onChangeText={_val => setPassword(_val)}
+          placeholder="Password"
+          secureTextEntry
+          style={styles.nameInput}
+        />
+      ) : null}
       <Pressable
         disabled={groupName.replace(/\s/g, '').length < 5 ? true : false}
         style={styles.createButton}
@@ -296,6 +308,6 @@ export default function Create({navigation}) {
           </Text>
         )}
       </Pressable>
-    </View>
+    </ScrollView>
   );
 }

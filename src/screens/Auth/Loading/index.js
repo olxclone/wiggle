@@ -10,23 +10,25 @@ export default function Loading({navigation}) {
   let user = useContext(AuthContext);
 
   useEffect(() => {
-    auth().onAuthStateChanged(user => {
-      if (user) {
-        messaging()
-          .getToken()
-          .then(fcm => setFcm(fcm));
-        firestore().collection('users').doc(auth().currentUser.uid).update({
-          token: fcm,
-        });
-        navigation.navigate('photogram.dashboard.screen');
-      } else {
-        navigation.navigate('photogram.login.screen');
-      }
-    });
+    setTimeout(() => {
+      auth().onAuthStateChanged(user => {
+        if (user) {
+          messaging()
+            .getToken()
+            .then(fcm => setFcm(fcm));
+          firestore().collection('users').doc(auth().currentUser.uid).update({
+            token: fcm,
+          });
+          navigation.navigate('photogram.dashboard.screen');
+        } else {
+          navigation.navigate('photogram.login.screen');
+        }
+      });
+    }, 5000);
   });
   return (
-    <View>
-      <Text>photogram</Text>
+    <View style={{justifyContent: 'center', alignItems: 'center', flex: 1}}>
+      <Text style={{fontSize: 24, fontWeight: 'bold'}}>Made By Madan</Text>
     </View>
   );
 }

@@ -31,12 +31,15 @@ export default function AllUsers({item}) {
           });
       }
     } catch (error) {}
-  }, []);
+  }, [item]);
+
   return (
     <View>
       <FlatList
         data={users}
-        renderItem={({item}) => <Text>{JSON.stringify(item.userName)}</Text>}
+        renderItem={({itemFromFlatlist}) => (
+          <Text>{JSON.stringify(itemFromFlatlist.userName)}</Text>
+        )}
       />
     </View>
   );
